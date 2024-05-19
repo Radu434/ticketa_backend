@@ -33,16 +33,25 @@ class Ticket
         return json_encode($tickets);
     }
 
-    public function create($data)
+    public function create($data):int
     {
-        $event_id = $data["event_id"];
-        $price = $data["price"];
+        try {
 
-        $sql = "INSERT INTO ticket (event_id, price)  VALUES($event_id,$price)";
-        $result = mysqli_query($this->conn, $sql);
+        if (isset($data["event_id"]) && isset($data["price"])) {
+            $event_id = $data["event_id"];
+            $price = $data["price"];
+            $sql = "INSERT INTO ticket (event_id, price)  VALUES($event_id,$price)";
+            $result = mysqli_query($this->conn, $sql);
+        
+        }
+    } catch (mysqli_sql_exception $e) {
+        echo "". $e->getMessage() ."";
+    }
+        return mysqli_insert_id($this->conn);
 
     }
-    public function getByUserId($user_id){
+    public function getByUserId($user_id)
+    {
         $query = "SELECT ticket.* FROM ticket JOIN ticket_transaction ON ticket.id LIKE ticket_transaction.ticket_id
          JOIN user ON ticket_transaction.user_id LIKE user.id WHERE user.id=$user_id";
         $result = mysqli_query($this->conn, $query);

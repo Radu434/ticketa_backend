@@ -39,22 +39,45 @@ class Event
         $location = $data["location"];
         $date = $data["date"];
         $description = $data["description"];
-        $image = $data["image"];
-
-
-        $sql = "INSERT INTO event (name,location,date,description,image)  VALUES($name,$location,$date,$description,$image)";
+        $photo = $data["photo"];
+        
+        $sql = "INSERT INTO event (name,location,date,description,photo)  VALUES('$name','$location','$date','$description','$photo')";
+        echo $sql;
         $result = mysqli_query($this->conn, $sql);
+
+        return mysqli_insert_id($this->conn) ;
+
+
 
     }
     public function update($ticketId, $data)
     {
-        $name = $data["name"];
-        $location = $data["location"];
-        $date = $data["date"];
-        $description = $data["description"];
-        $image = $data["image"];
-        $sql = "UPDATE event SET name = $name,location=$location,date=$date,description=$description,image=$image ";
-        mysqli_query($this->conn, $sql);
+        $current = $this->getById($ticketId);
+
+
+        $sql = "UPDATE event SET name = ?, location = ?, date = ?, description = ?, photo = ? WHERE id = ?";
+        
+
+        $stmt = mysqli_prepare($this->conn,$sql);
+        
+
+        $name = $data["name"] ?? $current["name"];
+        $location = $data["location"] ?? $current["location"];
+        $date = $data["date"] ?? $current["date"];
+        $description = $data["description"] ?? $current["description"];
+        $photo = $data["photo"] ?? $current["photo"];
+        $id = (int)$ticketId;
+        
+        $stmt->bind_param('sssssi', $name, $location, $date, $description, $photo, $id);
+        
+        if ($stmt->execute() === false) {
+            die('Execute failed: ' . htmlspecialchars($stmt->error));
+        } else {
+            echo 'Update successful!';
+        }
+        
+        $stmt->close();
+
 
     }
     public function delete($event_id)

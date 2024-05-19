@@ -41,6 +41,7 @@ class User
 
         $sql = "INSERT INTO Ticket (email,password,username)  VALUES($email,$password,$username)";
         $result = mysqli_query($this->conn, $sql);
+        return mysqli_insert_id($this->conn) ;
 
     }
     public function update($ticketId, $data)
