@@ -72,11 +72,10 @@ class Event
         
         if ($stmt->execute() === false) {
             die('Execute failed: ' . htmlspecialchars($stmt->error));
-        } else {
-            echo 'Update successful!';
-        }
+        } 
         
         $stmt->close();
+        return mysqli_affected_rows($this->conn);
 
 
     }

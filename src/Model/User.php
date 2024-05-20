@@ -39,19 +39,27 @@ class User
         $password = $data["password"];
         $username = $data["username"];
 
-        $sql = "INSERT INTO Ticket (email,password,username)  VALUES($email,$password,$username)";
-        $result = mysqli_query($this->conn, $sql);
-        return mysqli_insert_id($this->conn) ;
+        $sql = "INSERT INTO user (email, password, username) VALUES (?, ?, ?)";
+        $stmt = mysqli_prepare($this->conn, $sql);
+        mysqli_stmt_bind_param($stmt, 'sss', $email, $password, $username);
+        $stmt->execute();
+        return mysqli_insert_id($this->conn);
 
     }
-    public function update($ticketId, $data)
+    public function update($userId, $data):int
     {
         $email = $data["email"];
         $password = $data["password"];
         $username = $data["username"];
-        $sql = "UPDATE user SET email = $email,password = $password,username = $username  ";
-        mysqli_query($this->conn, $sql);
+        $sql = "UPDATE user SET email = ?,password = ?,username = ?  WHERE id = $userId";
+        $stmt = mysqli_prepare($this->conn, $sql);
+        mysqli_stmt_bind_param($stmt, 'sss', $email, $password, $username);
+        if ($stmt->execute() === false) {
+            die('Execute failed: ' . htmlspecialchars($stmt->error));
+        }
 
+        $stmt->close();
+        return mysqli_affected_rows($this->conn);
     }
     public function delete($user_id)
     {

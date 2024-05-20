@@ -35,7 +35,6 @@ class Ticket
 
     public function create($data):int
     {
-        try {
 
         if (isset($data["event_id"]) && isset($data["price"])) {
             $event_id = $data["event_id"];
@@ -44,9 +43,6 @@ class Ticket
             $result = mysqli_query($this->conn, $sql);
         
         }
-    } catch (mysqli_sql_exception $e) {
-        echo "". $e->getMessage() ."";
-    }
         return mysqli_insert_id($this->conn);
 
     }
