@@ -26,14 +26,38 @@ class User
     {
         $query = "SELECT * FROM user WHERE id LIKE $user_id";
         $result = mysqli_query($this->conn, $query);
-        $tickets = [];
+        $users = [];
         while ($row = mysqli_fetch_assoc($result)) {
-            $tickets[] = $row;
+            $users[] = $row;
         }
-        return json_encode($tickets);
+        return json_encode($users);
+    }
+    public function getByEmail($email)
+    {
+        // Prepare the SQL statement
+        $stmt = $this->conn->prepare("SELECT * FROM user WHERE email LIKE ?");
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $users = [];
+        while ($row = $result->fetch_assoc()) {
+            $users[] = $row;
+        }
+        $stmt->close();
+        return json_encode($users);
+    }
+    public function getByUsername($username)
+    {
+        $query = "SELECT * FROM username WHERE id LIKE $username";
+        $result = mysqli_query($this->conn, $query);
+        $users = [];
+        while ($row = mysqli_fetch_assoc($result)) {
+            $users[] = $row;
+        }
+        return json_encode($users);
     }
 
-    public function create($data)
+    public function create($data): int
     {
         $email = $data["email"];
         $password = $data["password"];
@@ -46,11 +70,12 @@ class User
         return mysqli_insert_id($this->conn);
 
     }
-    public function update($userId, $data):int
+    public function update($userId, $data): int
     {
-        $email = $data["email"];
-        $password = $data["password"];
-        $username = $data["username"];
+        $current = json_decode($this->getById($userId), true)[0];
+        $email = $data["email"] ?? $current["email"];
+        $password = $data["password"] ?? $current["password"];
+        $username = $data["username"] ?? $current["username"];
         $sql = "UPDATE user SET email = ?,password = ?,username = ?  WHERE id = $userId";
         $stmt = mysqli_prepare($this->conn, $sql);
         mysqli_stmt_bind_param($stmt, 'sss', $email, $password, $username);
@@ -59,7 +84,7 @@ class User
         }
 
         $stmt->close();
-        return mysqli_affected_rows($this->conn);
+        return mysqli_insert_id( $this->conn);
     }
     public function delete($user_id)
     {

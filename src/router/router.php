@@ -2,16 +2,14 @@
 include './src/Controller/ticket_controller.php';
 include './src/Controller/user_controller.php';
 include './src/Controller/event_controller.php';
-
-
-
 class Router
 {
     private $controllers;
+    
 
     function __construct()
     {
-        $this->controllers = ['ticket' => new Ticket_Controller(),'user' => new UserController(),'event' => new EventController()];
+        $this->controllers = ['ticket' => new Ticket_Controller(),'user' => new UserControler(),'event' => new EventController()];
     }
     public function route($route, $operation)
     {
@@ -19,7 +17,11 @@ class Router
             $this->controllers[$route]->parse($operation);
 
         } else {
-            echo 'Invalid Route';
+            http_response_code(404);    
+            echo json_encode([
+                "message" => "Invalid Route",
+                "route" => $route,
+            ]);
         }
     }
 }

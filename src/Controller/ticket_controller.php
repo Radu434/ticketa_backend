@@ -12,96 +12,133 @@ class Ticket_Controller extends ControllerTemplate
     }
 
 
-    public function processSingleOperation($operation): void
+    public function processSingleOperation($parameters): void
     {
-        switch ($operation[1]) {
-            case '': {
-
-                echo $this->ticket->getAll();
-                break;
-            }
+        switch ($_SERVER['REQUEST_METHOD']) {
             case 'GET': {
-                if (is_numeric($operation[2])) {
-                    echo $this->ticket->getById($operation[2]);
-                } else {
-                    if ($operation[2] == 'user'&&count($operation)>3) {
-                        if(is_numeric($operation[3])){
-                            echo $this->ticket->getByUserId($operation[3]);
-
-                        }
-                        else{
-                            echo 'Invalid Operation';
-                        }
-                    } else {
-                        echo $this->ticket->getAll();
-
+                $error = true;
+                if (array_key_exists('id', $parameters)) {
+                    if (is_numeric($parameters['id'])) {
+                        $error = false;
+                        echo $this->ticket->getById($parameters["id"]);
                     }
                 }
-                break;
-            }
-            case 'POST': {
-                $this->ticket->create(['event_id' => 1, 'price' => 20]);
+                if (array_key_exists('user_id', $parameters)) {
+                    if (is_numeric($parameters['user_id'])) {
+                        $error = false;
+                        echo $this->ticket->getByUserId($parameters["user_id"]);
+                    }
+
+                }
+                if (array_key_exists('event_id', $parameters)) {
+                    if (is_numeric($parameters['event_id'])) {
+                        $error = false;
+                        echo $this->ticket->getByEvent($parameters["event_id"]);
+                    }
+
+                }
+                if ($error) {
+                    http_response_code(404);
+                    echo json_encode([
+                        "message" => "Invalid Operation",
+                        "operation" => $_SERVER['REQUEST_METHOD'],
+                        'parameters' => $parameters
+                    ]);
+                }
                 break;
             }
             case 'PATCH': {
+                if (array_key_exists('id', $parameters)) {
+                    $error = true;
+                    if (is_numeric($parameters['id'])) {
+                        $_PATCH = $this->stringToKVArray(urldecode(file_get_contents('php://input')));
+                        if (key_exists('price', $_PATCH) && key_exists('event_id', $_PATCH)) {
+                            $this->ticket->update($parameters['id'], $_PATCH);
+                            $error = false;
+                            echo json_encode([
+                                "message" => "Ticket Updated",
+                                "id" => $parameters['id']
+                            ]);
+                        }
 
-                if (is_numeric($operation[2])) {
-                    $this->ticket->update($operation[2], ['event_id' => 12, 'price' => 2340]);
-                } else {
-                    echo 'Invalid Operation';
+                    }
+                    if ($error) {
+                        http_response_code(404);
+                        echo json_encode([
+                            "message" => "Invalid Operation",
+                            "operation" => $_SERVER['REQUEST_METHOD'],
+                            "parameters" => $parameters
+                        ]);
+                    }
+
                 }
+
                 break;
             }
             case 'DELETE': {
+                $error = true;
+                if (array_key_exists('id', $parameters)) {
 
-
-                if (is_numeric($operation[2])) {
-                    echo $this->ticket->delete($operation[2]);
-                } else {
-                    echo 'Invalid deletion id';
+                    if (is_numeric($parameters['id'])) {
+                        $error = false;
+                        $this->ticket->delete($parameters["id"]);
+                        echo json_encode([
+                            "message" => "Ticket deleted",
+                            "id" => $parameters["id"]
+                        ]);
+                    }
+                }
+                if ($error) {
+                    http_response_code(404);
+                    echo json_encode([
+                        "message" => "Invalid Operation",
+                        "operation" => $_SERVER['REQUEST_METHOD'],
+                        'parameters' => $parameters
+                    ]);
                 }
 
+                break;
+            }
+
+            default:
+            http_response_code(404);
+                echo json_encode([
+                    "message" => "Invalid Operation",
+                    "operation" => $_SERVER['REQUEST_METHOD'],
+                    'parametes' => $parameters
+                ]);
+                break;
+
+        }
+    }
+    public function processGroupOperation(): void
+    {
+        switch ($_SERVER['REQUEST_METHOD']) {
+
+            case 'GET': {
+                echo json_encode($this->ticket->getAll());
+                break;
+            }
+            case "POST": {
+                json_decode(file_get_contents('php://input'), true)?$data=json_decode(file_get_contents('php://input'), true):$data = $_POST;
+                $id = $this->ticket->create($data);
+                echo json_encode([
+                    "message" => "Ticket created",
+                    "id" => $id
+                ]);
                 break;
             }
 
 
             default:
-                echo 'Invalid Operation';
+            http_response_code(404);
+                echo json_encode([
+                    "message" => "Invalid Operation",
+                    "operation" => $_SERVER['REQUEST_METHOD']
+                ]);
                 break;
 
         }
-    }
-    public function processGroupOperation($operation): void
-    {
-        if (count($operation) > 1) {
 
-
-            switch ($operation[1]) {
-                case '': {
-
-                    echo $this->ticket->getAll();
-                    break;
-                }
-
-                case 'GET': {
-
-                    echo $this->ticket->getAll();
-                    break;
-                }
-                case 'POST': {
-
-                    break;
-                }
-
-
-                default:
-                    echo 'Invalid Operation';
-                    break;
-
-            }
-        } else {
-            echo $this->ticket->getAll();
-
-        }
     }
 }

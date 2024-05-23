@@ -1,6 +1,6 @@
 <?php
 require_once ("./src/inc/config.php");
-require_once './src/Model/Event.php';
+require_once './src/Model/event.php';
 require_once ("./src/Controller/ControllerTemplate.php");
 
 class EventController extends ControllerTemplate
@@ -12,86 +12,125 @@ class EventController extends ControllerTemplate
     }
 
 
-    public function processSingleOperation($operation): void
+    public function processSingleOperation($parameters): void
     {
-        switch ($operation[1]) {
-            case '': {
-
-                echo $this->event->getAll();
-                break;
-            }
+        switch ($_SERVER['REQUEST_METHOD']) {
             case 'GET': {
-                if (is_numeric($operation[2])) {
-                    echo $this->event->getById($operation[2]);
-                } else {
-                    echo $this->event->getAll();
+                $error = true;
+                if (array_key_exists('id', $parameters)) {
+                    if (is_numeric($parameters['id'])) {
+                        $error = false;
+                        echo $this->event->getById($parameters["id"]);
+                    }
                 }
-                break;
-            }
-            case 'POST': {
-              //  $this->event->create(['event_id' => 1, 'price' => 20]);
+                if ($error) {
+                    http_response_code(404);    
+                    echo json_encode([
+                        "message" => "Invalid Operation",
+                        "operation" => $_SERVER['REQUEST_METHOD'],
+                        'parameters' => $parameters
+                    ]);
+                }
                 break;
             }
             case 'PATCH': {
 
-                if (is_numeric($operation[2])) {
-                   // $this->event->update($operation[2], ['event_id' => 12, 'price' => 2340]);
-                } else {
-                    echo 'Invalid Operation';
+                if (array_key_exists('id', $parameters)) {
+                    $error = true;
+
+                    if (is_numeric($parameters['id'])) {
+                        $_PATCH = $this->stringToKVArray(urldecode(file_get_contents('php://input')));
+                        if (
+                            key_exists('name', $_PATCH) && key_exists('location', $_PATCH)
+                            && key_exists('date', $_PATCH) && key_exists('photo', $_PATCH) && key_exists('description', $_PATCH)
+                        ) {
+
+                            $this->event->update($parameters['id'], $_PATCH);
+                            $error = false;
+                            echo json_encode([
+                                "message" => "event Updated",
+                                "id" => $parameters['id']
+                            ]);
+                        }
+
+                    }
+                    if ($error) {
+                        http_response_code(404);    
+                        echo json_encode([
+                            "message" => "Invalid Operation",
+                            "operation" => $_SERVER['REQUEST_METHOD'],
+                            "parameters" => $parameters
+                        ]);
+                    }
+
                 }
+
                 break;
             }
             case 'DELETE': {
+                $error = true;
+                if (array_key_exists('id', $parameters)) {
 
-
-                if (is_numeric($operation[2])) {
-                    echo $this->event->delete($operation[2]);
-                } else {
-                    echo 'Invalid deletion id';
+                    if (is_numeric($parameters['id'])) {
+                        $error = false;
+                        $this->event->delete($parameters["id"]);
+                        echo json_encode([
+                            "message" => "event deleted",
+                            "id" => $parameters["id"]
+                        ]);
+                    }
+                }
+                if ($error) {
+                    http_response_code(404);  
+                    echo json_encode([
+                        "message" => "Invalid Operation",
+                        "operation" => $_SERVER['REQUEST_METHOD'],
+                        'parameters' => $parameters
+                    ]);
                 }
 
+                break;
+            }
+
+            default:
+            http_response_code(404);  
+                echo json_encode([
+                    "message" => "Invalid Operation",
+                    "operation" => $_SERVER['REQUEST_METHOD'],
+                    'parametes' => $parameters
+                ]);
+                break;
+
+        }
+    }
+    public function processGroupOperation(): void
+    {
+        switch ($_SERVER['REQUEST_METHOD']) {
+
+            case 'GET': {
+                echo $this->event->getAll();
+                break;
+            }
+            case "POST": {
+                json_decode(file_get_contents('php://input'), true)?$data=json_decode(file_get_contents('php://input'), true):$data = $_POST;
+                $id = $this->event->create($data);
+                echo json_encode([
+                    "message" => "event created",
+                    "id" => $id
+                ]);
                 break;
             }
 
 
             default:
-                echo 'Invalid Operation';
+            http_response_code(404);  
+                echo json_encode([
+                    "message" => "Invalid Operation",
+                    "operation" => $_SERVER['REQUEST_METHOD']
+                ]);
                 break;
 
         }
-    }
-    public function processGroupOperation($operation): void
-    {
-        if (count($operation) > 1) {
 
-
-            switch ($operation[1]) {
-                case '': {
-
-                    echo $this->event->getAll();
-                    break;
-                }
-
-                case 'GET': {
-
-                    echo $this->event->getAll();
-                    break;
-                }
-                case 'POST': {
-
-                    break;
-                }
-
-
-                default:
-                    echo 'Invalid Operation';
-                    break;
-
-            }
-        }
-        else{
-            echo $this->event->getAll();
-
-        }
     }
 }
