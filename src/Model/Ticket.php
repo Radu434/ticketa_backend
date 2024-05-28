@@ -47,20 +47,22 @@ class Ticket
     public function create($data): int
     {
 
-        if (isset($data["event_id"]) && isset($data["price"]) && isset($data["user_id"])) {
+        if (isset($data["event_id"]) && isset($data["price"])) {
             $event_id = $data["event_id"];
             $price = $data["price"];
-            $ticket_sql = "INSERT INTO ticket (event_id, price)  VALUES($event_id,$price)";
-            $result = mysqli_query($this->conn, $ticket_sql);
-            if ($result) {
-                $last_ticket_id = mysqli_insert_id($this->conn);
-                $user_id = $data["user_id"];
-                $transaction_sql = "INSERT INTO ticket_transaction (user_id, ticket_id)  VALUES($user_id,$last_ticket_id)";
-                $result = mysqli_query($this->conn, $transaction_sql);
-                return $result;
-            }
+            $type = $data["type"];
+
+            // Correctly format the SQL query with quotes around string values
+            $sql = "INSERT INTO ticket (event_id, price, type) VALUES(?,?,?)";
+            $stmt = mysqli_prepare($this->conn, $sql);
+
+            $stmt->bind_param("ids", $event_id,$price, $type);
+        
+            $stmt->execute();
+
+            return mysqli_insert_id( $this->conn);
         }
-        return http_response_code(403);
+        return -1;
        
 
     }

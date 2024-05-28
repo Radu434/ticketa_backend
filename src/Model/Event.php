@@ -50,19 +50,22 @@ class Event
     }
     public function update($eventId, $data)
     {
-        $current = $this->getById($eventId);
-
+        $current = json_decode($this->getById($eventId),true)[0];
 
         $sql = "UPDATE event SET name = ?, location = ?, date = ?, description = ?, photo = ? WHERE id = ?";
-        
-
         $stmt = mysqli_prepare($this->conn,$sql);
 
-        $name = $data["name"] ?? $current["name"];
-        $location = $data["location"] ?? $current["location"];
-        $date = $data["date"] ?? $current["date"];
-        $description = $data["description"] ?? $current["description"];
-        $photo = $data["photo"] ?? $current["photo"];
+        function getValue($dataValue, $currentValue) {
+            return (!isset($dataValue) || empty($dataValue)) ? $currentValue : $dataValue;
+        }
+        
+        $name = getValue($data["name"], $current["name"]);
+        $location = getValue($data["location"], $current["location"]);
+        $date = getValue($data["date"], $current["date"]);
+        $description = getValue($data["description"], $current["description"]);
+        $photo = getValue($data["photo"], $current["photo"]);
+
+        
         $id = (int)$eventId;
         
         $stmt->bind_param('sssssi', $name, $location, $date, $description, $photo, $id);
