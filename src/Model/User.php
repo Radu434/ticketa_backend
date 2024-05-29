@@ -72,10 +72,15 @@ class User
     }
     public function update($userId, $data): int
     {
+        function getValue($dataValue, $currentValue) {
+            return (!isset($dataValue) || empty($dataValue)) ? $currentValue : $dataValue;
+        }
+
         $current = json_decode($this->getById($userId), true)[0];
-        $email = $data["email"] ?? $current["email"];
-        $password = $data["password"] ?? $current["password"];
-        $username = $data["username"] ?? $current["username"];
+        $email = getValue($data["email"],$current["email"]);
+        $password = getValue($data["password"] , $current["password"]);
+        $username = getValue($data["username"] , $current["username"]);
+        
         $sql = "UPDATE user SET email = ?,password = ?,username = ?  WHERE id = $userId";
         $stmt = mysqli_prepare($this->conn, $sql);
         mysqli_stmt_bind_param($stmt, 'sss', $email, $password, $username);

@@ -76,6 +76,7 @@ class Ticket
             $tickets[] = $row;
         }
         return json_encode($tickets);
+
     }
     public function update($ticketId, $data)
     {
