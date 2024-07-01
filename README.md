@@ -1,7 +1,7 @@
 # Ticketa Backend
 A ticket ordering platform. Databases laboratory university project.
 For the frontend repository reffer th this link: 
-[PHP Backend Repo](https://github.com/Radu434/ticketa)
+[PHP Frontend Repository](https://github.com/Radu434/ticketa)
 ## Table of contents
 * [Description](#description)
 * [Technologies](#technologies)
